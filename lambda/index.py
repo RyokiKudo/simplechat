@@ -4,8 +4,6 @@ import os
 import boto3
 import re  # 正規表現モジュールをインポート
 from botocore.exceptions import ClientError
-
-#FastAPIのURLの取得とアクセス  
 import urllib.request
 
 # Lambda コンテキストからリージョンを抽出する関数
@@ -20,7 +18,7 @@ def extract_region_from_arn(arn):
 bedrock_client = None
 
 # モデルID
-MODEL_ID = os.environ.get("MODEL_ID", "us.amazon.nova-lite-v1:0")
+# MODEL_ID = os.environ.get("MODEL_ID", "us.amazon.nova-lite-v1:0")
 
 def lambda_handler(event, context):
     try:
@@ -45,7 +43,7 @@ def lambda_handler(event, context):
         conversation_history = body.get('conversationHistory', [])
         
         print("Processing message:", message)
-        print("Using model:", MODEL_ID)
+        # print("Using model:", MODEL_ID)
         
         # 会話履歴を使用
         messages = conversation_history.copy()
@@ -84,9 +82,14 @@ def lambda_handler(event, context):
         
         print("Calling Bedrock invoke_model API with payload:", json.dumps(request_payload))
         
+        fastapi_url = "https://cb3f-34-125-2-239.ngrok-free.app"
+
+
+        
         # invoke_model APIを呼び出し
         response = bedrock_client.invoke_model(
-            modelId=MODEL_ID,
+            # modelId=MODEL_ID,
+            fastapi_url
             body=json.dumps(request_payload),
             contentType="application/json"
         )
@@ -99,28 +102,10 @@ def lambda_handler(event, context):
         if not response_body.get('output') or not response_body['output'].get('message') or not response_body['output']['message'].get('content'):
             raise Exception("No response content from the model")
         
+
         # アシスタントの応答を取得
         assistant_response = response_body['output']['message']['content'][0]['text']
         
-        ## 応答の検証
-        # FastAPI エンドポイントへのアクセス
-        fastapi_url = "https://c6c1-34-87-33-218.ngrok-free.app"  # ← 実際のURLに置き換える
-
-        # FastAPIに渡すデータ（POSTのjson）
-        fastapi_request_payload = {
-            "input_text": message
-        }
-        data = json.dumps(fastapi_request_payload).encode("utf-8")
-
-        # リクエストの構築
-        req = urllib.request.Request(
-            fastapi_url,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        ##
-
         # アシスタントの応答を会話履歴に追加
         messages.append({
             "role": "assistant",
@@ -161,3 +146,4 @@ def lambda_handler(event, context):
                 "error": str(error)
             })
         }
+
