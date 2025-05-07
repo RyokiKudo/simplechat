@@ -4,6 +4,8 @@ import os
 import boto3
 import re  # 正規表現モジュールをインポート
 from botocore.exceptions import ClientError
+
+import requests
 import urllib.request
 
 # Lambda コンテキストからリージョンを抽出する関数
@@ -20,14 +22,28 @@ bedrock_client = None
 # モデルID
 # MODEL_ID = os.environ.get("MODEL_ID", "us.amazon.nova-lite-v1:0")
 
+
+# FastAPIの推論APIを呼び出す関数
+def call_fastapi_inference(api_url, payload):
+    try:
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(api_url, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"FastAPI inference request failed: {e}")
+
+
 def lambda_handler(event, context):
     try:
         # コンテキストから実行リージョンを取得し、クライアントを初期化
         global bedrock_client
+        """
         if bedrock_client is None:
             region = extract_region_from_arn(context.invoked_function_arn)
             bedrock_client = boto3.client('bedrock-runtime', region_name=region)
             print(f"Initialized Bedrock client in region: {region}")
+        """
         
         print("Received event:", json.dumps(event))
         
@@ -57,6 +73,7 @@ def lambda_handler(event, context):
         # Nova Liteモデル用のリクエストペイロードを構築
         # 会話履歴を含める
         bedrock_messages = []
+        """
         for msg in messages:
             if msg["role"] == "user":
                 bedrock_messages.append({
@@ -68,7 +85,7 @@ def lambda_handler(event, context):
                     "role": "assistant", 
                     "content": [{"text": msg["content"]}]
                 })
-        
+        """
         # invoke_model用のリクエストペイロード
         request_payload = {
             "messages": bedrock_messages,
