@@ -88,7 +88,7 @@ def lambda_handler(event, context):
         """
         # invoke_model用のリクエストペイロード
         request_payload = {
-            "messages": bedrock_messages,
+            "messages": messages,
             "inferenceConfig": {
                 "maxTokens": 512,
                 "stopSequences": [],
@@ -99,14 +99,12 @@ def lambda_handler(event, context):
         
         print("Calling Bedrock invoke_model API with payload:", json.dumps(request_payload))
         
-        fastapi_url = "https://cb3f-34-125-2-239.ngrok-free.app"
+        api_url = "https://96e5-35-204-250-84.ngrok-free.app/"
 
-
-        
         # invoke_model APIを呼び出し
         response = bedrock_client.invoke_model(
             # modelId=MODEL_ID,
-            fastapi_url
+            api_url
             body=json.dumps(request_payload),
             contentType="application/json"
         )
